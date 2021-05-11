@@ -5,7 +5,7 @@ This repository is the official implementation of [How Framelets Enhance Graph N
 
 ![UFGConv](fig_ufgconv.png)
 
-![image](fig_ufgconv.png {width=40px height=400px})
+<img src="fig_ufgconv.png" width="100" height="100">
 
 The above figure shows ***framelet convolution (UFGConv)***: given a graph with structure (adjacency matrix) and feature information, the target is to properly embed the graph by graph convolution. The demonstrative sample is a graph with 10 nodes and 3 features extracted from **PROTEINS** in **TUDataset**. The framelet dilation and scale level are both set to default value 2. The ***UFGConv*** applies tensor-based framelet transform, and constructs one low-pass and two high-pass *framelet transform matrices*, which are then multiplied by the input feature matrix to produce the framelet coefficients. Moreover, these coefficients are processed by the trainable network filter and compressed by the shrinkage. Finally, the activated coefficients are reconstructed and sent back to the spatial domain as the convolution output by using the framelet transform matrices again with transposed alignment.
 
