@@ -3,6 +3,14 @@
 
 This repository is the official implementation of [How Framelets Enhance Graph Neural Networks](https://arxiv.org/abs/2102.06986).
 
+![UFGConv](fig1.png)
+
+The above figure shows **framelet convolution**
+
+![UFGConv](fig4-small.png)
+
+The above figure shows **framelet pooling** 
+
 ## Requirements
 
 To install requirements:
@@ -31,6 +39,17 @@ To reproduce the results in Table 3 of the main text, you can use the following 
 python UFGPool.py --dataset PROTEINS
 ```
 Other hyperparameters include: --lr, --wd, --nhid, --Lev, --s, --dropout.
+
+## Citation 
+If you consider our codes and datasets useful, please cite:
+```
+@inproceedings{ma2020path,
+  title={How Framelets Enhance Graph Neural Networks},
+  author={Zheng, Xuebin and Zhou, Bingxin and Gao, Junbin and Wang, Yu Guang and Lio, Pietro and Li, Ming and Montufar, Guido},
+  booktitle={ICML},
+  year={2021}
+}
+```
 
 ## Contributing
 Copyright (c) <2020>
