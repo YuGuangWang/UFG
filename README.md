@@ -1,7 +1,7 @@
 
 # How Framelets Enhance Graph Neural Networks
 
-This repository is the official implementation of [How Framelets Enhance Graph Neural Networks]().
+This repository is the official implementation of [How Framelets Enhance Graph Neural Networks](https://arxiv.org/abs/2102.06986).
 
 ## Requirements
 
