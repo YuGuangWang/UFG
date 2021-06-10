@@ -47,4 +47,4 @@ torchaudio==0.7.0a0+ac17b64
 torchvision==0.8.1
 tqdm==4.54.0
 typing-extensions @ file:///tmp/build/80754af9/typing_extensions_1598376058250/work
-urllib3==1.26.4
+urllib3==1.26.5
