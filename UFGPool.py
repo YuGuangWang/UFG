@@ -16,7 +16,8 @@ from torch_geometric.utils import degree
 import argparse
 import os.path as osp
 from QM7 import QM7, qm7_test, qm7_test_train
-
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
 # function for pre-processing
 @torch.no_grad()
@@ -134,14 +135,14 @@ def UFGPool(x, batch, batch_size, d_list, d_index, aggre_mode='sum'):
     for i in range(batch_size):
         # extract the i-th graph
         bi = (batch == i)
-        coefs = torch.sparse.mm(scipy_to_torch_sparse(d_list[i][0]).to(device), x[bi, :])
+        coefs = torch.sparse.mm(scipy_to_torch_sparse(d_list[i][0]).to(device), x[bi, :])###shape 90 x 64
+        idx = torch.tensor(d_index[i][0]).to(device)
         if i == 0:
-            x_pool = f(coefs, d_index[i][0].to(device)).flatten()
+            x_pool = f(coefs, idx).flatten()#####output should be r-1 * lev+1 * 64
         else:
-            x_pool = torch.vstack((x_pool, f(coefs, d_index[i][0].to(device)).flatten()))
+            x_pool = torch.vstack((x_pool, f(coefs, idx).flatten())) ##d_index contain all batch
 
-    return x_pool
-
+    return x_pool ##batch_size*64 vector
 
 class Net(nn.Module):
     def __init__(self, num_features, nhid, num_classes, r, Lev, dropout_prob=0.5):
@@ -152,11 +153,11 @@ class Net(nn.Module):
         self.GConv2 = GCNConv(nhid, nhid)
 
         self.fc = nn.Sequential(nn.Linear(((r - 1) * Lev + 1) * nhid, nhid),
-                                nn.BatchNorm1d(nhid),
+                                #nn.BatchNorm1d(nhid),
                                 nn.ReLU(),
                                 nn.Dropout(dropout_prob),
-                                nn.Linear(nhid, num_classes),
-                                nn.BatchNorm1d(num_classes))
+                                nn.Linear(nhid, num_classes),)
+                                #nn.BatchNorm1d(num_classes))
 
     def forward(self, data):
         x, edge_index, batch, d, d_index = data.x, data.edge_index, data.batch, data.d, data.d_index
@@ -228,11 +229,11 @@ def MyDataset(dataset, Lev, s, n, FrameType='Haar', add_feature=False, QM7=False
                     d_aggre = d[m, q]
                 else:
                     d_aggre = sparse.vstack((d_aggre, d[m, q]))
-        d_aggre = sparse.vstack((d[0, Lev - 1], d_aggre))
+        d_aggre = sparse.vstack((d[0, Lev - 1], d_aggre)) ###stack the n x n matrix
         data1.d = [d_aggre]
         # get d_index
-        a = [i for i in range((r - 1) * Lev + 1)]
-        data1.d_index = [torch.tensor([a[i // num_nodes] for i in range(len(a) * num_nodes)])]
+        a = [i for i in range((r - 1) * Lev + 1)]##len=3
+        data1.d_index=[[a[i // num_nodes] for i in range(len(a) * num_nodes)]]##3*num [0,1,2;,0,1,2...]
         # append data1 into dataset1
         dataset1.append(data1)    
     if QM7:
@@ -250,6 +251,8 @@ def test(model, loader, device):
     for data in loader:
         data = data.to(device)
         out = model(data)
+        if len(out.shape)<2:
+            out = out.unsqueeze(0)
         pred = out.max(dim=1)[1]
         correct += pred.eq(data.y).sum().item()
         loss += F.cross_entropy(out, data.y,reduction='sum').item()
@@ -272,7 +275,7 @@ if __name__ == '__main__':
                         help='weight decay (default: 5e-3)')
     parser.add_argument('--nhid', type=int, default=64,
                         help='number of hidden units (default: 64)')
-    parser.add_argument('--batch_size', type=int, default=64,
+    parser.add_argument('--batch_size', type=int, default=53,
                         help='batch size (default: 64)')
     parser.add_argument('--Lev', type=int, default=2,
                         help='level of transform (default: 2)')
@@ -324,7 +327,7 @@ if __name__ == '__main__':
     num_training = int(len(dataset) * 0.8)
     num_val = int(len(dataset) * 0.1)
     num_test = len(dataset) - (num_training + num_val)
-
+    print("num dataset:",num_training,num_val,num_test)
     # Parameter Setting
     batch_size = args.batch_size
     learning_rate = args.lr
@@ -365,7 +368,7 @@ if __name__ == '__main__':
             for i, data in enumerate(train_loader):
                 data = data.to(device)
                 optimizer.zero_grad()
-                out = model(data)
+                out = model(data).squeeze(0)
                 loss = loss_criteria(out, data.y, reduction='sum')
                 loss.backward()
                 optimizer.step()
